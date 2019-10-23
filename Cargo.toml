@@ -1,0 +1,19 @@
+[package]
+name = "atomic-take"
+version = "0.1.0"
+authors = ["Alice Ryhl <alice@ryhl.io>"]
+edition = "2018"
+description = "Atomically take a value out of a container once."
+repository = "https://github.com/Darksonn/atomic-take"
+readme = "README.md"
+keywords = ["atomic", "take", "lock-free", "option"]
+categories = ["data-structures", "concurrency", "no-std"]
+license = "MIT"
+
+[badges]
+maintenance = { status = "passively-maintained" }
+
+[dependencies]
+
+[dev-dependencies]
+futures = "0.1.29"
