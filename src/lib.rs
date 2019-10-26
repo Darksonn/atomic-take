@@ -82,6 +82,8 @@ use core::mem::{self, MaybeUninit};
 use core::ptr;
 use core::sync::atomic::{Ordering, AtomicBool};
 
+use core::fmt;
+
 type PhantomUnsync = PhantomData<Cell<u8>>;
 
 /// A container with an atomic take operation.
@@ -171,6 +173,22 @@ impl<T> Drop for AtomicTake<T> {
 
 // As this api can only be used to move values between threads, Sync is not needed.
 unsafe impl<T: Send> Sync for AtomicTake<T> {}
+
+impl<T> From<T> for AtomicTake<T> {
+    fn from(t: T) -> AtomicTake<T> {
+        AtomicTake::new(t)
+    }
+}
+
+impl<T> fmt::Debug for AtomicTake<T> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        if self.is_taken() {
+            write!(f, "Empty AtomicTake")
+        } else {
+            write!(f, "Non-Empty AtomicTake")
+        }
+    }
+}
 
 #[cfg(test)]
 mod tests {
