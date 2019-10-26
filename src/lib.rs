@@ -78,7 +78,7 @@
 
 use core::cell::Cell;
 use core::marker::PhantomData;
-use core::mem::{self, ManuallyDrop};
+use core::mem::{self, MaybeUninit};
 use core::ptr;
 use core::sync::atomic::{Ordering, AtomicBool};
 
@@ -87,7 +87,7 @@ type PhantomUnsync = PhantomData<Cell<u8>>;
 /// A container with an atomic take operation.
 pub struct AtomicTake<T> {
     taken: AtomicBool,
-    value: ManuallyDrop<T>,
+    value: MaybeUninit<T>,
     _unsync: PhantomUnsync,
 }
 
@@ -96,7 +96,15 @@ impl<T> AtomicTake<T> {
     pub fn new(value: T) -> Self {
         AtomicTake {
             taken: AtomicBool::new(false),
-            value: ManuallyDrop::new(value),
+            value: MaybeUninit::new(value),
+            _unsync: PhantomData,
+        }
+    }
+    /// Create an empty `AtomicTake` that contains no value.
+    pub fn empty() -> Self {
+        AtomicTake {
+            taken: AtomicBool::new(true),
+            value: MaybeUninit::uninit(),
             _unsync: PhantomData,
         }
     }
@@ -105,7 +113,7 @@ impl<T> AtomicTake<T> {
     pub fn take(&self) -> Option<T> {
         if self.taken.swap(true, Ordering::Relaxed) == false {
             unsafe {
-                Some(ptr::read(&*self.value))
+                Some(ptr::read(self.value.as_ptr()))
             }
         } else {
             None
@@ -118,11 +126,17 @@ impl<T> AtomicTake<T> {
     pub fn take_mut(&mut self) -> Option<T> {
         if mem::replace(self.taken.get_mut(), true) == false {
             unsafe {
-                Some(ptr::read(&*self.value))
+                Some(ptr::read(self.value.as_ptr()))
             }
         } else {
             None
         }
+    }
+
+    /// Check whether the value is taken. Note that if this returns `false`, then this
+    /// is immediately stale if another thread could be concurrently trying to take it.
+    pub fn is_taken(&self) -> bool {
+        self.taken.load(Ordering::Relaxed)
     }
 
     /// Insert a new value into the `AtomicTake` and return the previous value.
@@ -133,8 +147,10 @@ impl<T> AtomicTake<T> {
     pub fn insert(&mut self, value: T) -> Option<T> {
         let previous = self.take_mut();
 
-        self.value = ManuallyDrop::new(value);
-        *self.taken.get_mut() = false;
+        unsafe {
+            ptr::write(self.value.as_mut_ptr(), value);
+            *self.taken.get_mut() = false;
+        }
 
         // Could also be written as below, but this avoids running the destructor.
         // *self = AtomicTake::new(value);
@@ -147,7 +163,7 @@ impl<T> Drop for AtomicTake<T> {
     fn drop(&mut self) {
         if !*self.taken.get_mut() {
             unsafe {
-                ManuallyDrop::drop(&mut self.value);
+                ptr::drop_in_place(self.value.as_mut_ptr());
             }
         }
     }
@@ -168,6 +184,13 @@ mod tests {
             unsafe {
                 *self.counter += 1;
             }
+        }
+    }
+
+    struct PanicOnDrop;
+    impl Drop for PanicOnDrop {
+        fn drop(&mut self) {
+            panic!("Panic on drop called.");
         }
     }
 
@@ -223,9 +246,11 @@ mod tests {
         let mut take = AtomicTake::new(CountDrops {
             counter: &mut counter1,
         });
+        assert!(!take.is_taken());
         take.insert(CountDrops {
             counter: &mut counter2,
         });
+        assert!(!take.is_taken());
         drop(take);
 
         assert_eq!(counter1, 1);
@@ -244,6 +269,8 @@ mod tests {
             counter: &mut counter2,
         });
 
+        assert!(!take.is_taken());
+
         assert_eq!(counter1, 1);
         assert_eq!(counter2, 0);
 
@@ -251,5 +278,31 @@ mod tests {
 
         assert_eq!(counter1, 1);
         assert_eq!(counter2, 1);
+    }
+
+    #[test]
+    fn empty_no_drop() {
+        let take: AtomicTake<PanicOnDrop> = AtomicTake::empty();
+        assert!(take.is_taken());
+        drop(take);
+    }
+
+    #[test]
+    fn empty_insert() {
+        let mut take = AtomicTake::empty();
+
+        assert!(take.is_taken());
+
+        let mut counter = 0;
+
+        take.insert(CountDrops {
+            counter: &mut counter,
+        });
+
+        assert!(!take.is_taken());
+
+        drop(take);
+
+        assert_eq!(counter, 1);
     }
 }
