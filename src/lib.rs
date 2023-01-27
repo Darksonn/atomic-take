@@ -95,7 +95,7 @@ pub struct AtomicTake<T> {
 
 impl<T> AtomicTake<T> {
     /// Create a new `AtomicTake` with the given value.
-    pub fn new(value: T) -> Self {
+    pub const fn new(value: T) -> Self {
         AtomicTake {
             taken: AtomicBool::new(false),
             value: MaybeUninit::new(value),
@@ -103,7 +103,7 @@ impl<T> AtomicTake<T> {
         }
     }
     /// Create an empty `AtomicTake` that contains no value.
-    pub fn empty() -> Self {
+    pub const fn empty() -> Self {
         AtomicTake {
             taken: AtomicBool::new(true),
             value: MaybeUninit::uninit(),
