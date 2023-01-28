@@ -1,4 +1,5 @@
 #![no_std]
+#![allow(clippy::bool_comparison)]
 //! This crate allows you to store a value that you can later take out atomically. As this
 //! crate uses atomics, no locking is involved in taking the value out.
 //!
