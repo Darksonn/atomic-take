@@ -12,7 +12,7 @@ As an example, you could store the [`Sender`] of an oneshot channel in an
 
 ```rust
 use atomic_take::AtomicTake;
-use futures::sync::oneshot;
+use tokio::sync::oneshot;
 
 let (send, mut recv) = oneshot::channel();
 
@@ -38,7 +38,7 @@ threads and receive a message from the first thread to run.
 use std::thread;
 use std::sync::Arc;
 use atomic_take::AtomicTake;
-use futures::sync::oneshot;
+use tokio::sync::oneshot;
 
 let (send, mut recv) = oneshot::channel();
 
@@ -77,8 +77,8 @@ assert!(recv.try_recv().unwrap().unwrap() < 3);
 
 This crate does not require the standard library.
 
-[`Sender`]: https://docs.rs/futures/0.1.29/futures/sync/oneshot/struct.Sender.html
-[`AtomicTake`]: https://docs.rs/atomic-take/1.0.0/atomic_take/struct.AtomicTake.html
+[`Sender`]: https://docs.rs/tokio/latest/tokio/sync/oneshot/struct.Sender.html
+[`AtomicTake`]: https://docs.rs/atomic-take/latest/atomic_take/struct.AtomicTake.html
 [`Arc`]: https://doc.rust-lang.org/std/sync/struct.Arc.html
 
 # Supported Rust Versions

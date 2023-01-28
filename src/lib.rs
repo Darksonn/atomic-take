@@ -8,7 +8,7 @@
 //!
 //! ```
 //! use atomic_take::AtomicTake;
-//! use futures::sync::oneshot;
+//! use tokio::sync::oneshot;
 //!
 //! let (send, mut recv) = oneshot::channel();
 //!
@@ -21,7 +21,7 @@
 //! };
 //!
 //! closure();
-//! assert_eq!(recv.try_recv().unwrap(), Some(()));
+//! assert!(recv.try_recv().is_ok());
 //!
 //! closure(); // This does nothing.
 //! ```
@@ -34,7 +34,7 @@
 //! use std::thread;
 //! use std::sync::Arc;
 //! use atomic_take::AtomicTake;
-//! use futures::sync::oneshot;
+//! use tokio::sync::oneshot;
 //!
 //! let (send, mut recv) = oneshot::channel();
 //!
@@ -68,12 +68,12 @@
 //! }
 //!
 //! // Confirm that one of the first three threads got to send the message first.
-//! assert!(recv.try_recv().unwrap().unwrap() < 3);
+//! assert!(recv.try_recv().unwrap() < 3);
 //! ```
 //!
 //! This crate does not require the standard library.
 //!
-//! [`Sender`]: https://docs.rs/futures/0.1.29/futures/sync/oneshot/struct.Sender.html
+//! [`Sender`]: https://docs.rs/tokio/latest/tokio/sync/oneshot/struct.Sender.html
 //! [`AtomicTake`]: struct.AtomicTake.html
 //! [`Arc`]: https://doc.rust-lang.org/std/sync/struct.Arc.html
 
