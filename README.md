@@ -80,3 +80,16 @@ This crate does not require the standard library.
 [`Sender`]: https://docs.rs/futures/0.1.29/futures/sync/oneshot/struct.Sender.html
 [`AtomicTake`]: https://docs.rs/atomic-take/1.0.0/atomic_take/struct.AtomicTake.html
 [`Arc`]: https://doc.rust-lang.org/std/sync/struct.Arc.html
+
+# Supported Rust Versions
+
+The current MSRV is 1.48.0. It may also work on earlier compiler versions, but
+they are not tested in CI when changes are made.
+
+# License
+
+This project is licensed under the MIT license.
+
+Unless you explicitly state otherwise, any contribution intentionally submitted
+for inclusion in this project by you, shall be licensed as MIT, without any
+additional terms or conditions.

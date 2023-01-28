@@ -9,6 +9,7 @@ readme = "README.md"
 keywords = ["atomic", "take", "lock-free", "option"]
 categories = ["data-structures", "concurrency", "no-std"]
 license = "MIT"
+rust-version = "1.48.0"
 
 [badges]
 maintenance = { status = "passively-maintained" }
