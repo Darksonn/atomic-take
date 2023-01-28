@@ -81,7 +81,7 @@ use core::cell::Cell;
 use core::marker::PhantomData;
 use core::mem::{self, MaybeUninit};
 use core::ptr;
-use core::sync::atomic::{Ordering, AtomicBool};
+use core::sync::atomic::{AtomicBool, Ordering};
 
 use core::fmt;
 
@@ -115,9 +115,7 @@ impl<T> AtomicTake<T> {
     /// caller will receive the value and all others will receive `None`.
     pub fn take(&self) -> Option<T> {
         if self.taken.swap(true, Ordering::Relaxed) == false {
-            unsafe {
-                Some(ptr::read(self.value.as_ptr()))
-            }
+            unsafe { Some(ptr::read(self.value.as_ptr())) }
         } else {
             None
         }
@@ -128,9 +126,7 @@ impl<T> AtomicTake<T> {
     /// `AtomicTake`, so no other threads will try to take it concurrently.
     pub fn take_mut(&mut self) -> Option<T> {
         if mem::replace(self.taken.get_mut(), true) == false {
-            unsafe {
-                Some(ptr::read(self.value.as_ptr()))
-            }
+            unsafe { Some(ptr::read(self.value.as_ptr())) }
         } else {
             None
         }
